@@ -9,6 +9,7 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 
+from .moralis_service import get_evm_balance, get_evm_erc20, MoralisError
 from .tracker_service import poll_bridge_and_execute
 
 
@@ -42,3 +43,27 @@ async def create_intent(intent: Intent, background_tasks: BackgroundTasks):
     # executed outside the request lifecycle.
     background_tasks.add_task(poll_bridge_and_execute, intent.dict())
     return {"status": "accepted", "message": "Intent received and queued"}
+
+
+
+ @app.get("/moralis/evm/balance")
+ async def evm_balance(address: str, chain: str = "eth"):
+     """Fetch native balance for an EVM address using Moralis.
+
+     Example: /moralis/evm/balance?address=0xabc&chain=arbitrum
+     """
+     try:
+         res = await get_evm_balance(address, chain)
+         return {"ok": True, "data": res}
+     except MoralisError as e:
+         raise HTTPException(status_code=502, detail=str(e))
+
+
+ @app.get("/moralis/evm/tokens")
+ async def evm_tokens(address: str, chain: str = "eth"):
+     """Fetch ERC-20 token balances for an EVM address via Moralis."""
+     try:
+         res = await get_evm_erc20(address, chain)
+         return {"ok": True, "tokens": res}
+     except MoralisError as e:
+         raise HTTPException(status_code=502, detail=str(e))
