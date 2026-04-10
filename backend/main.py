@@ -12,6 +12,7 @@ from typing import Optional
 
 from .moralis_service import get_evm_balance, get_evm_erc20, MoralisError
 from .solana_service import get_solana_balance, get_solana_tokens, SolanaError
+from .price_service import get_native_prices, get_token_price_by_contract
 from .tracker_service import poll_bridge_and_execute
 
 
@@ -96,3 +97,87 @@ async def sol_tokens(address: str, rpc: str | None = None):
         return {"ok": True, "tokens": res}
     except SolanaError as e:
         raise HTTPException(status_code=502, detail=str(e))
+
+
+@app.get('/portfolio/summary')
+async def portfolio_summary(evm_address: str | None = None, sol_address: str | None = None, evm_chain: str = 'eth', rpc: str | None = None):
+    """Return aggregated balances and token lists for EVM and Solana addresses, with fiat estimates where available."""
+    out = {"evm": None, "solana": None, "prices": {}}
+    # Fetch native prices first
+    try:
+        prices = await get_native_prices()
+        out['prices'] = prices
+    except Exception:
+        out['prices'] = {}
+
+    if evm_address:
+        try:
+            bal = await get_evm_balance(evm_address, chain=evm_chain)
+            tokens = await get_evm_erc20(evm_address, chain=evm_chain)
+            # Try to enrich tokens with USD values where possible (contract-based)
+            enriched = []
+            for t in tokens:
+                contract = t.get('token_address') or t.get('contract_address') or t.get('contractAddress')
+                price = None
+                if contract:
+                    try:
+                        price = await get_token_price_by_contract(contract, platform='ethereum')
+                    except Exception:
+                        price = None
+                # compute usd if we have price and amount
+                amount_raw = t.get('balance') or t.get('amount')
+                usd = None
+                try:
+                    if price and amount_raw:
+                        # Moralis returns balance as string in token smallest units; also may include decimals separately
+                        decimals = int(t.get('decimals', 0) or 0)
+                        amt = int(amount_raw) / (10 ** decimals) if decimals else float(t.get('balance', 0))
+                        usd = amt * price
+                except Exception:
+                    usd = None
+
+                enriched.append({**t, 'price_usd': price, 'usd_value': usd})
+
+            native_usd = None
+            try:
+                native_usd = float(bal.get('balance_eth')) * float(out['prices'].get('eth', 0) or 0)
+            except Exception:
+                native_usd = None
+
+            out['evm'] = {"address": evm_address, "balance": bal, "tokens": enriched, "native_usd": native_usd}
+        except Exception as e:
+            out['evm'] = {"error": str(e)}
+
+    if sol_address:
+        try:
+            bal = await get_solana_balance(sol_address, rpc)
+            tokens = await get_solana_tokens(sol_address, rpc)
+            # Solana token price resolution is best-effort (CoinGecko contract lookup)
+            enriched = []
+            for t in tokens:
+                mint = t.get('mint')
+                price = None
+                if mint:
+                    try:
+                        price = await get_token_price_by_contract(mint, platform='solana')
+                    except Exception:
+                        price = None
+                amt = None
+                try:
+                    amt = float(t.get('amount') or 0)
+                except Exception:
+                    amt = None
+                usd = amt * price if (amt is not None and price is not None) else None
+                enriched.append({**t, 'price_usd': price, 'usd_value': usd})
+
+            native_usd = None
+            try:
+                native_usd = float(bal.get('sol')) * float(out['prices'].get('sol', 0) or 0)
+            except Exception:
+                native_usd = None
+
+            out['solana'] = {"address": sol_address, "balance": bal, "tokens": enriched, "native_usd": native_usd}
+        except Exception as e:
+            out['solana'] = {"error": str(e)}
+
+    return out

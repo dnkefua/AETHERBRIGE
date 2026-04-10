@@ -2,9 +2,12 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { useWallet } from './WalletProvider'
 
 export default function TopNav() {
   const [open, setOpen] = useState(false)
+
+  const wallet = (typeof window !== 'undefined') ? useWallet() : null
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#071019] bg-gradient-to-b from-[#071019] to-transparent border-b border-white/5">
@@ -36,7 +39,14 @@ export default function TopNav() {
 
         <div className="flex items-center gap-3">
           <Link href="/" className="text-xs font-mono text-on-surface-variant hidden md:block">Docs</Link>
-          <button className="px-3 py-1 rounded bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm">Connect Wallets</button>
+          {wallet ? (
+            <div className="flex items-center gap-2">
+              <button onClick={() => wallet.connectEvm()} className="px-3 py-1 rounded bg-white/5 text-sm">{wallet.evmAddress ? wallet.evmAddress.slice(0,6)+'...'+wallet.evmAddress.slice(-4) : 'Connect EVM'}</button>
+              <button onClick={() => wallet.connectSol()} className="px-3 py-1 rounded bg-white/5 text-sm">{wallet.solAddress ? wallet.solAddress.slice(0,6)+'...'+wallet.solAddress.slice(-4) : 'Connect SOL'}</button>
+            </div>
+          ) : (
+            <button className="px-3 py-1 rounded bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm">Connect Wallets</button>
+          )}
         </div>
       </div>
     </header>

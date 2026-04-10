@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk, Roboto_Mono } from 'next/font/google';
 import './globals.css'; // Global styles
 import TopNav from './components/TopNav'
 import Breadcrumbs from './components/Breadcrumbs'
+import WalletProvider from './components/WalletProvider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,7 +34,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       <body suppressHydrationWarning>
         <TopNav />
         <Breadcrumbs />
-        {children}
+        <WalletProvider>{children}</WalletProvider>
       </body>
     </html>
   );
