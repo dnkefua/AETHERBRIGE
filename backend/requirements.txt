@@ -6,3 +6,7 @@ pytest>=7.0
 pytest-asyncio>=0.21.0
 # Placeholder for the official Pacifica Python SDK
 # pacifica-fi @ git+https://github.com/pacifica-fi/python-sdk.git
+
+# Redis client for caching
+redis>=4.6.0
+

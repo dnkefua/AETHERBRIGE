@@ -6,6 +6,7 @@ with `jsonParsed` encoding.
 """
 from typing import Any, Dict, List, Optional
 import httpx
+from .cache import get as cache_get, set as cache_set
 
 DEFAULT_RPC = "https://api.mainnet-beta.solana.com"
 
@@ -28,14 +29,25 @@ async def _rpc_request(rpc_url: str, method: str, params: Optional[list] = None)
 
 async def get_solana_balance(address: str, rpc_url: Optional[str] = None) -> Dict[str, Any]:
     rpc = rpc_url or DEFAULT_RPC
+    key = f'solana:balance:{rpc}:{address}'
+    cached = await cache_get(key)
+    if cached:
+        return cached
+
     result = await _rpc_request(rpc, 'getBalance', [address])
     lamports = int(result.get('value', 0))
     sol = lamports / 10**9
-    return {"lamports": lamports, "sol": sol, "rpc": rpc}
+    out = {"lamports": lamports, "sol": sol, "rpc": rpc}
+    await cache_set(key, out, ttl=15)
+    return out
 
 
 async def get_solana_tokens(address: str, rpc_url: Optional[str] = None) -> List[Dict[str, Any]]:
     rpc = rpc_url or DEFAULT_RPC
+    key = f'solana:tokens:{rpc}:{address}'
+    cached = await cache_get(key)
+    if cached:
+        return cached
     # Use jsonParsed to get token amounts and mint addresses
     params = [address, {"encoding": "jsonParsed", "commitment": "confirmed", "filters": []}]
     result = await _rpc_request(rpc, 'getTokenAccountsByOwner', params)
@@ -53,3 +65,4 @@ async def get_solana_tokens(address: str, rpc_url: Optional[str] = None) -> List
                 'decimals': token_amount.get('decimals'),
             })
     return items
+

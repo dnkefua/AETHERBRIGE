@@ -9,6 +9,7 @@ Replace or extend with additional Moralis endpoints as needed.
 import os
 from typing import Any, Dict, List, Optional
 import httpx
+from .cache import get as cache_get, set as cache_set
 
 MORALIS_KEY = os.environ.get("MORALIS_API_KEY")
 EVM_BASE = "https://deep-index.moralis.io/api/v2"
@@ -37,11 +38,18 @@ async def get_evm_balance(address: str, chain: str = "eth") -> Dict[str, Any]:
 
     Returns a dict: {"balance": <wei string>, "balance_eth": <float>}
     """
+    key = f'evm:balance:{chain}:{address.lower()}'
+    cached = await cache_get(key)
+    if cached:
+        return cached
+
     data = await _get(f"/{address}/balance", params={"chain": chain})
     # Moralis returns a string balance in wei
     balance_wei = int(data.get("balance", 0))
     balance_eth = balance_wei / 10**18
-    return {"balance": str(balance_wei), "balance_eth": balance_eth, "chain": chain}
+    out = {"balance": str(balance_wei), "balance_eth": balance_eth, "chain": chain}
+    await cache_set(key, out, ttl=15)
+    return out
 
 
 async def get_evm_erc20(address: str, chain: str = "eth") -> List[Dict[str, Any]]:
@@ -49,6 +57,11 @@ async def get_evm_erc20(address: str, chain: str = "eth") -> List[Dict[str, Any]
 
     Each entry follows Moralis' shape (contract_address, name, symbol, decimals, balance).
     """
+    key = f'evm:erc20:{chain}:{address.lower()}'
+    cached = await cache_get(key)
+    if cached:
+        return cached
+
     data = await _get(f"/{address}/erc20", params={"chain": chain})
-    # data is typically a list
+    await cache_set(key, data, ttl=30)
     return data
