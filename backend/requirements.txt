@@ -1,0 +1,8 @@
+fastapi>=0.95.0
+uvicorn[standard]>=0.22.0
+httpx>=0.24.0
+pydantic>=1.10
+pytest>=7.0
+pytest-asyncio>=0.21.0
+# Placeholder for the official Pacifica Python SDK
+# pacifica-fi @ git+https://github.com/pacifica-fi/python-sdk.git
