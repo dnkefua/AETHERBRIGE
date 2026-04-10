@@ -116,27 +116,30 @@ async def portfolio_summary(evm_address: str | None = None, sol_address: str | N
             tokens = await get_evm_erc20(evm_address, chain=evm_chain)
             # Try to enrich tokens with USD values where possible (contract-based)
             enriched = []
-            for t in tokens:
-                contract = t.get('token_address') or t.get('contract_address') or t.get('contractAddress')
-                price = None
-                if contract:
-                    try:
-                        price = await get_token_price_by_contract(contract, platform='ethereum')
-                    except Exception:
-                        price = None
-                # compute usd if we have price and amount
-                amount_raw = t.get('balance') or t.get('amount')
-                usd = None
-                try:
-                    if price and amount_raw:
-                        # Moralis returns balance as string in token smallest units; also may include decimals separately
-                        decimals = int(t.get('decimals', 0) or 0)
-                        amt = int(amount_raw) / (10 ** decimals) if decimals else float(t.get('balance', 0))
-                        usd = amt * price
-                except Exception:
-                    usd = None
+                    for t in tokens:
+                        contract = (t.get('token_address') or t.get('contract_address') or t.get('contractAddress') or t.get('contract'))
+                        price_info = None
+                        if contract:
+                            try:
+                                price_info = await get_token_price_by_contract(contract, platform='ethereum')
+                            except Exception:
+                                price_info = None
 
-                enriched.append({**t, 'price_usd': price, 'usd_value': usd})
+                        price = price_info.get('price') if price_info else None
+                        icon = price_info.get('image') if price_info else None
+
+                        # compute usd if we have price and amount
+                        amount_raw = t.get('balance') or t.get('amount') or t.get('value')
+                        usd = None
+                        try:
+                            if price and amount_raw:
+                                decimals = int(t.get('decimals', 0) or 0)
+                                amt = int(amount_raw) / (10 ** decimals) if decimals else float(t.get('balance', 0))
+                                usd = amt * price
+                        except Exception:
+                            usd = None
+
+                        enriched.append({**t, 'price_usd': price, 'usd_value': usd, 'icon': icon})
 
             native_usd = None
             try:
@@ -156,19 +159,21 @@ async def portfolio_summary(evm_address: str | None = None, sol_address: str | N
             enriched = []
             for t in tokens:
                 mint = t.get('mint')
-                price = None
+                price_info = None
                 if mint:
                     try:
-                        price = await get_token_price_by_contract(mint, platform='solana')
+                        price_info = await get_token_price_by_contract(mint, platform='solana')
                     except Exception:
-                        price = None
+                        price_info = None
+                price = price_info.get('price') if price_info else None
+                icon = price_info.get('image') if price_info else None
                 amt = None
                 try:
                     amt = float(t.get('amount') or 0)
                 except Exception:
                     amt = None
                 usd = amt * price if (amt is not None and price is not None) else None
-                enriched.append({**t, 'price_usd': price, 'usd_value': usd})
+                enriched.append({**t, 'price_usd': price, 'usd_value': usd, 'icon': icon})
 
             native_usd = None
             try:

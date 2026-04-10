@@ -47,8 +47,18 @@ export default function PortfolioPage() {
               <div className="font-semibold">Tokens</div>
               <ul className="mt-2 space-y-2 text-sm">
                 {summary.evm.tokens.map((t: any, idx: number) => (
-                  <li key={idx} className="flex justify-between">
-                    <div>{t.name || t.symbol || t.contract_address || t.token_address}</div>
+                  <li key={idx} className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      {t.icon ? (
+                        <img src={t.icon} alt="icon" className="w-6 h-6 rounded-full" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-xs">?</div>
+                      )}
+                      <div>
+                        <div className="font-medium text-sm">{t.symbol || t.name || t.contract_address || t.token_address}</div>
+                        <div className="text-xs text-on-surface-variant">{t.decimals ? (Number(t.balance) / (10 ** t.decimals)).toFixed(4) : t.balance}</div>
+                      </div>
+                    </div>
                     <div>{t.usd_value ? '$' + Number(t.usd_value).toFixed(2) : '—'}</div>
                   </li>
                 ))}
@@ -65,8 +75,18 @@ export default function PortfolioPage() {
               <div className="font-semibold">Tokens</div>
               <ul className="mt-2 space-y-2 text-sm">
                 {summary.solana.tokens.map((t: any, idx: number) => (
-                  <li key={idx} className="flex justify-between">
-                    <div>{t.mint}</div>
+                  <li key={idx} className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      {t.icon ? (
+                        <img src={t.icon} alt="icon" className="w-6 h-6 rounded-full" />
+                      ) : (
+                        <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center text-xs">S</div>
+                      )}
+                      <div>
+                        <div className="font-medium text-sm">{t.mint}</div>
+                        <div className="text-xs text-on-surface-variant">{t.amount}</div>
+                      </div>
+                    </div>
                     <div>{t.usd_value ? '$' + Number(t.usd_value).toFixed(2) : '—'}</div>
                   </li>
                 ))}
