@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import CrossChainPerpInterface from './components/CrossChainPerpInterface';
 
 export default function TerminalPage() {
@@ -9,31 +10,7 @@ export default function TerminalPage() {
 
   return (
     <div className="overflow-x-hidden pb-20">
-      {/* TopAppBar */}
-      <header className="fixed top-0 w-full z-50 bg-[#0e0e0e] bg-gradient-to-b from-[#0e0e0e] to-transparent shadow-[0_0_15px_rgba(161,250,255,0.05)]">
-        <div className="flex justify-between items-center px-6 h-16 w-full max-w-none">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-cyan-400">hub</span>
-            <span className="text-xl font-bold tracking-tighter text-cyan-400 font-headline uppercase">AETHER_BRIDGE</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              <div className="w-8 h-8 rounded-full border border-primary/20 bg-surface-container-high flex items-center justify-center overflow-hidden">
-                <span className="material-symbols-outlined text-[16px] text-blue-400">token</span>
-              </div>
-              <div className="w-8 h-8 rounded-full border border-primary/20 bg-surface-container-high flex items-center justify-center overflow-hidden">
-                <span className="material-symbols-outlined text-[16px] text-purple-400">rocket_launch</span>
-              </div>
-            </div>
-            <button className="bg-primary/10 border border-primary/30 px-3 py-1.5 rounded-sm text-[10px] font-headline font-bold text-primary tracking-widest hover:bg-cyan-400/20 transition-all uppercase">
-              CONNECT_WALLETS
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content Canvas */}
-      <main className="pt-20 px-4 space-y-4 max-w-md mx-auto">
+      <main className="pt-24 px-4 space-y-4 max-w-md mx-auto">
         {/* Embedded demo component: Cross-Chain Perp Interface */}
         <div className="mb-6">
           <CrossChainPerpInterface />
@@ -222,22 +199,22 @@ export default function TerminalPage() {
 
       {/* BottomNavBar */}
       <nav className="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 px-4 pb-safe bg-[#0e0e0e]/80 backdrop-blur-xl border-t border-white/5 z-40">
-        <a className="flex flex-col items-center justify-center text-cyan-400 bg-cyan-400/5 rounded-none border-t-2 border-cyan-400 py-1 flex-1" href="#">
+        <Link href="/" className="flex flex-col items-center justify-center text-cyan-400 bg-cyan-400/5 rounded-none border-t-2 border-cyan-400 py-1 flex-1">
           <span className="material-symbols-outlined text-[20px]">grid_view</span>
           <span className="font-headline text-[10px] tracking-widest uppercase">DASHBOARD</span>
-        </a>
-        <a className="flex flex-col items-center justify-center text-slate-500 py-1 flex-1 hover:text-cyan-300 transition-colors" href="#">
+        </Link>
+        <Link href="/markets" className="flex flex-col items-center justify-center text-slate-500 py-1 flex-1 hover:text-cyan-300 transition-colors">
           <span className="material-symbols-outlined text-[20px]">monitoring</span>
           <span className="font-headline text-[10px] tracking-widest uppercase">MARKETS</span>
-        </a>
-        <a className="flex flex-col items-center justify-center text-slate-500 py-1 flex-1 hover:text-cyan-300 transition-colors" href="#">
+        </Link>
+        <Link href="/portfolio" className="flex flex-col items-center justify-center text-slate-500 py-1 flex-1 hover:text-cyan-300 transition-colors">
           <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
           <span className="font-headline text-[10px] tracking-widest uppercase">PORTFOLIO</span>
-        </a>
-        <a className="flex flex-col items-center justify-center text-slate-500 py-1 flex-1 hover:text-cyan-300 transition-colors" href="#">
+        </Link>
+        <Link href="/settings" className="flex flex-col items-center justify-center text-slate-500 py-1 flex-1 hover:text-cyan-300 transition-colors">
           <span className="material-symbols-outlined text-[20px]">settings</span>
           <span className="font-headline text-[10px] tracking-widest uppercase">SETTINGS</span>
-        </a>
+        </Link>
       </nav>
 
       {/* Execution Modal */}

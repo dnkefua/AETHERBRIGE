@@ -1,6 +1,8 @@
 import type {Metadata} from 'next';
 import { Inter, Space_Grotesk, Roboto_Mono } from 'next/font/google';
 import './globals.css'; // Global styles
+import TopNav from './components/TopNav'
+import Breadcrumbs from './components/Breadcrumbs'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -28,7 +30,11 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       <head>
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <TopNav />
+        <Breadcrumbs />
+        {children}
+      </body>
     </html>
   );
 }
