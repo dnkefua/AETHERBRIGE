@@ -26,6 +26,8 @@ export default function CrossChainPerpInterface() {
   const [leverage, setLeverage] = useState(5)
   const [size, setSize] = useState(1)
   const [status, setStatus] = useState<string | null>(null)
+  const [evmBalance, setEvmBalance] = useState<number | null>(null)
+  const [solBalance, setSolBalance] = useState<number | null>(null)
 
   const simulateBridgeTx = () => {
     // Create a pseudo tx hash to emulate a bridge transaction
@@ -75,6 +77,27 @@ export default function CrossChainPerpInterface() {
       }
     }, 800)
   }
+
+  // Fetch balances when wallets are connected
+  React.useEffect(() => {
+    if (evmConnected) {
+      fetch('http://localhost:8000/moralis/evm/balance?address=0x0000000000000000000000000000000000000000&chain=eth')
+        .then(r => r.json())
+        .then(j => {
+          if (j.ok && j.data) setEvmBalance(j.data.balance_eth)
+        })
+        .catch(() => setEvmBalance(null))
+    }
+
+    if (solConnected) {
+      fetch('http://localhost:8000/solana/balance?address=ExampleSolanaPubKey')
+        .then(r => r.json())
+        .then(j => {
+          if (j.ok && j.data) setSolBalance(j.data.sol)
+        })
+        .catch(() => setSolBalance(null))
+    }
+  }, [evmConnected, solConnected])
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-gradient-to-b from-[#061018] to-[#08121a] rounded-lg border border-white/5 shadow-lg">
@@ -134,6 +157,10 @@ export default function CrossChainPerpInterface() {
       <div className="mt-3 text-sm text-on-surface-variant">
         <div>Bridge: Arbitrum → Solana (USDC)</div>
         <div className="mt-2 py-2 px-3 bg-white/5 rounded text-xs">Status: {status ?? 'idle'}</div>
+        <div className="mt-2 text-xs grid grid-cols-2 gap-2">
+          <div>EVM Balance: {evmConnected ? (evmBalance !== null ? `${evmBalance} ETH` : 'fetching...') : 'disconnected'}</div>
+          <div>Solana Balance: {solConnected ? (solBalance !== null ? `${solBalance} SOL` : 'fetching...') : 'disconnected'}</div>
+        </div>
       </div>
     </div>
   )

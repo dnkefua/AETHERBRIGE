@@ -6,10 +6,12 @@ cross-chain settlement and then instruct the Pacifica client to execute the
 requested trade.
 """
 from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 
 from .moralis_service import get_evm_balance, get_evm_erc20, MoralisError
+from .solana_service import get_solana_balance, get_solana_tokens, SolanaError
 from .tracker_service import poll_bridge_and_execute
 
 
@@ -30,6 +32,15 @@ class Intent(BaseModel):
 
 
 app = FastAPI(title="AetherBridge Intent API")
+
+# Allow local frontend dev (http://localhost:3000) to call the API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.post("/intent", status_code=202)
@@ -67,3 +78,21 @@ async def create_intent(intent: Intent, background_tasks: BackgroundTasks):
          return {"ok": True, "tokens": res}
      except MoralisError as e:
          raise HTTPException(status_code=502, detail=str(e))
+
+
+@app.get("/solana/balance")
+async def sol_balance(address: str, rpc: str | None = None):
+    try:
+        res = await get_solana_balance(address, rpc)
+        return {"ok": True, "data": res}
+    except SolanaError as e:
+        raise HTTPException(status_code=502, detail=str(e))
+
+
+@app.get("/solana/tokens")
+async def sol_tokens(address: str, rpc: str | None = None):
+    try:
+        res = await get_solana_tokens(address, rpc)
+        return {"ok": True, "tokens": res}
+    except SolanaError as e:
+        raise HTTPException(status_code=502, detail=str(e))
